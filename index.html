@@ -1,0 +1,977 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <title>考試準備 App</title>
+    <meta name="theme-color" content="#667eea">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="考試準備">
+    
+    <!-- PWA Manifest -->
+    <link rel="manifest" href="data:application/json;base64,ewogICJuYW1lIjogIuiAg+ivleWHhuWCmyBBcHAiLAogICJzaG9ydF9uYW1lIjogIuiAg+ivlUFwcCIsCiAgImRlc2NyaXB0aW9uIjogIuW5tOW6leiAg+ivleWAkuaVuOiojOaZgiArIOeVquiMhOmQnyArIOaIkOWwseinmOmMhyIsCiAgInN0YXJ0X3VybCI6ICIvIiwKICAiZGlzcGxheSI6ICJzdGFuZGFsb25lIiwKICAiYmFja2dyb3VuZF9jb2xvciI6ICIjNjY3ZWVhIiwKICAidGhlbWVfY29sb3IiOiAiIzY2N2VlYSIsCiAgImljb25zIjogWwogICAgewogICAgICAic3JjIjogImRhdGE6aW1hZ2Uvc3ZnK3htbDtiYXNlNjQsUEhOMlp5QjNhV1IwYUQwaU1USTRJaUJvWldsbmFIUTlJakV5T0NJZ2RtbGxkMEp2ZUQwaU1DQXdJREV5T0NBeU9DSWdabWxzYkQwaUkySmpOMlZsWVNJK1BISmxZM1FnZUQwaU1UQWlJSGs5SWpFd0lpQjNhV1IwYUQwaU1UQTRJaUJvWldsbmFIUTlJakV3T0NJZ2NuZzlJalFpSUdacGJHdzlJaU5tWm1ZaUx6NDhkR1Y0ZENCNFBTSTJOQ0lnZVQwaU5UUWlJR1pwYkd3OUlpTXpNek1pSUdadmJuUXRjMmw2WlQwaU1qUWlQanh1Y21Ga1BpOHVhWE10WjJGd1Bqd3ZkR1Y0ZEQ0OEwzTjJaejQ9IiwKICAgICAgInNpemVzIjogIjEyOHgxMjgiLAogICAgICAidHlwZSI6ICJpbWFnZS9zdmcreG1sIgogICAgfQogIF0KfQ==">
+    
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Microsoft JhengHei', 'Segoe UI', Roboto, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            color: #333;
+            overflow-x: hidden;
+            -webkit-user-select: none;
+            user-select: none;
+        }
+
+        /* 底部導航 */
+        .bottom-nav {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(20px);
+            display: flex;
+            justify-content: space-around;
+            padding: 10px 0 max(10px, env(safe-area-inset-bottom));
+            border-top: 1px solid rgba(0, 0, 0, 0.1);
+            z-index: 1000;
+        }
+
+        .nav-item {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 8px 16px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            border-radius: 12px;
+            min-width: 60px;
+        }
+
+        .nav-item.active {
+            background: rgba(102, 126, 234, 0.1);
+            color: #667eea;
+        }
+
+        .nav-icon {
+            font-size: 24px;
+            margin-bottom: 4px;
+        }
+
+        .nav-label {
+            font-size: 10px;
+            font-weight: 500;
+        }
+
+        /* 主要內容區 */
+        .main-content {
+            padding: max(20px, env(safe-area-inset-top)) 20px 100px 20px;
+            max-width: 100vw;
+        }
+
+        .page {
+            display: none;
+            animation: fadeIn 0.3s ease;
+        }
+
+        .page.active {
+            display: block;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .page-header {
+            text-align: center;
+            margin-bottom: 30px;
+            color: white;
+        }
+
+        .page-title {
+            font-size: 2rem;
+            margin-bottom: 8px;
+            text-shadow: 0 2px 10px rgba(0, 0, 0, 0.3);
+        }
+
+        .page-subtitle {
+            opacity: 0.9;
+            font-size: 0.9rem;
+        }
+
+        /* 卡片樣式 */
+        .card {
+            background: rgba(255, 255, 255, 0.95);
+            border-radius: 20px;
+            padding: 24px;
+            margin-bottom: 20px;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+            backdrop-filter: blur(20px);
+        }
+
+        /* 倒數計時頁面 */
+        .exam-card {
+            background: linear-gradient(135deg, #ff9a9e 0%, #fecfef 100%);
+            border-radius: 16px;
+            padding: 24px;
+            text-align: center;
+            margin-bottom: 16px;
+            box-shadow: 0 8px 24px rgba(255, 154, 158, 0.3);
+        }
+
+        .exam-title {
+            font-size: 1.1rem;
+            font-weight: bold;
+            margin-bottom: 8px;
+            color: #444;
+        }
+
+        .exam-date {
+            font-size: 0.85rem;
+            opacity: 0.8;
+            margin-bottom: 16px;
+            color: #666;
+        }
+
+        .countdown-display {
+            font-size: 1.8rem;
+            font-weight: bold;
+            color: #d63384;
+            font-family: -apple-system-monospaced, 'SF Mono', monospace;
+        }
+
+        /* 番茄鐘頁面 */
+        .timer-container {
+            text-align: center;
+        }
+
+        .subject-selector {
+            margin-bottom: 30px;
+        }
+
+        .subject-selector select {
+            width: 100%;
+            padding: 16px;
+            border-radius: 12px;
+            border: 2px solid #e1e8ed;
+            font-size: 1rem;
+            background: white;
+            -webkit-appearance: none;
+            appearance: none;
+            background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 20 20'%3e%3cpath stroke='%236b7280' stroke-linecap='round' stroke-linejoin='round' stroke-width='1.5' d='m6 8 4 4 4-4'/%3e%3c/svg%3e");
+            background-position: right 12px center;
+            background-repeat: no-repeat;
+            background-size: 16px;
+            padding-right: 40px;
+        }
+
+        .timer-circle {
+            width: 280px;
+            height: 280px;
+            margin: 0 auto 30px;
+            position: relative;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            box-shadow: 0 20px 40px rgba(102, 126, 234, 0.3);
+        }
+
+        .timer-inner {
+            width: 240px;
+            height: 240px;
+            background: white;
+            border-radius: 50%;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            box-shadow: inset 0 0 20px rgba(0, 0, 0, 0.1);
+        }
+
+        .timer-display {
+            font-size: 3.5rem;
+            font-weight: 300;
+            color: #333;
+            font-family: -apple-system-monospaced, 'SF Mono', monospace;
+            margin-bottom: 8px;
+        }
+
+        .timer-status {
+            font-size: 1rem;
+            color: #666;
+            font-weight: 500;
+        }
+
+        .timer-controls {
+            display: flex;
+            justify-content: center;
+            gap: 16px;
+            margin: 30px 0;
+        }
+
+        .btn {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            padding: 16px 28px;
+            border-radius: 50px;
+            cursor: pointer;
+            font-size: 1rem;
+            font-weight: 600;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 20px rgba(102, 126, 234, 0.3);
+            min-width: 90px;
+            touch-action: manipulation;
+        }
+
+        .btn:active {
+            transform: scale(0.95);
+        }
+
+        .btn.danger {
+            background: linear-gradient(135deg, #ff6b6b 0%, #ee5a52 100%);
+            box-shadow: 0 4px 20px rgba(255, 107, 107, 0.3);
+        }
+
+        .btn.success {
+            background: linear-gradient(135deg, #51cf66 0%, #40c057 100%);
+            box-shadow: 0 4px 20px rgba(81, 207, 102, 0.3);
+        }
+
+        /* 成就頁面 */
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 16px;
+            margin-bottom: 30px;
+        }
+
+        .stat-card {
+            background: linear-gradient(135deg, #ffecd2 0%, #fcb69f 100%);
+            padding: 20px;
+            border-radius: 16px;
+            text-align: center;
+            box-shadow: 0 4px 16px rgba(252, 182, 159, 0.3);
+        }
+
+        .stat-number {
+            font-size: 2.5rem;
+            font-weight: bold;
+            color: #d35400;
+            margin-bottom: 4px;
+            font-family: -apple-system-monospaced, 'SF Mono', monospace;
+        }
+
+        .stat-label {
+            font-size: 0.85rem;
+            color: #8b4513;
+            font-weight: 500;
+        }
+
+        .progress-section {
+            margin-bottom: 30px;
+        }
+
+        .progress-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 12px;
+        }
+
+        .progress-bar {
+            background: #f8f9fa;
+            border-radius: 20px;
+            height: 12px;
+            overflow: hidden;
+            box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.1);
+        }
+
+        .progress-fill {
+            background: linear-gradient(90deg, #667eea 0%, #764ba2 100%);
+            height: 100%;
+            transition: width 0.5s ease;
+            border-radius: 20px;
+        }
+
+        .achievement-list {
+            max-height: 400px;
+            overflow-y: auto;
+        }
+
+        .achievement-item {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+            padding: 16px;
+            margin: 12px 0;
+            background: rgba(243, 156, 18, 0.1);
+            border-radius: 16px;
+            border-left: 4px solid #f39c12;
+        }
+
+        .achievement-icon {
+            font-size: 2rem;
+            min-width: 50px;
+            text-align: center;
+        }
+
+        .achievement-text {
+            flex: 1;
+        }
+
+        .achievement-title {
+            font-weight: bold;
+            margin-bottom: 4px;
+            color: #333;
+        }
+
+        .achievement-desc {
+            font-size: 0.85rem;
+            color: #666;
+        }
+
+        .achievement-date {
+            font-size: 0.75rem;
+            color: #999;
+            text-align: right;
+        }
+
+        /* 通知 */
+        .notification {
+            position: fixed;
+            top: max(20px, env(safe-area-inset-top));
+            left: 20px;
+            right: 20px;
+            background: rgba(39, 174, 96, 0.95);
+            color: white;
+            padding: 16px 20px;
+            border-radius: 12px;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2);
+            transform: translateY(-100px);
+            transition: transform 0.3s ease;
+            z-index: 2000;
+            backdrop-filter: blur(20px);
+        }
+
+        .notification.show {
+            transform: translateY(0);
+        }
+
+        /* 響應式調整 */
+        @media (max-width: 380px) {
+            .timer-circle {
+                width: 240px;
+                height: 240px;
+            }
+            
+            .timer-inner {
+                width: 200px;
+                height: 200px;
+            }
+            
+            .timer-display {
+                font-size: 2.8rem;
+            }
+            
+            .page-title {
+                font-size: 1.6rem;
+            }
+        }
+
+        /* iOS 樣式優化 */
+        @supports (-webkit-touch-callout: none) {
+            .bottom-nav {
+                padding-bottom: calc(10px + env(safe-area-inset-bottom));
+            }
+        }
+
+        /* 深色模式支持 */
+        @media (prefers-color-scheme: dark) {
+            .card {
+                background: rgba(40, 44, 52, 0.95);
+                color: #e6e6e6;
+            }
+            
+            .bottom-nav {
+                background: rgba(40, 44, 52, 0.95);
+                border-top-color: rgba(255, 255, 255, 0.1);
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- 主要內容區 -->
+    <div class="main-content">
+        <!-- 倒數計時頁面 -->
+        <div id="countdown-page" class="page active">
+            <div class="page-header">
+                <h1 class="page-title">📅 考試倒數</h1>
+                <p class="page-subtitle">距離目標越來越近了！</p>
+            </div>
+            
+            <div class="exam-card">
+                <div class="exam-title">經濟部國營事業職員考試</div>
+                <div class="exam-date">2025年11月9日</div>
+                <div class="countdown-display" id="countdown-1">計算中...</div>
+            </div>
+            
+            <div class="exam-card">
+                <div class="exam-title">地方特考三等環境檢驗類</div>
+                <div class="exam-date">2025年12月6日</div>
+                <div class="countdown-display" id="countdown-2">計算中...</div>
+            </div>
+            
+            <div class="exam-card">
+                <div class="exam-title">初考會計類考試</div>
+                <div class="exam-date">2026年1月10日</div>
+                <div class="countdown-display" id="countdown-3">計算中...</div>
+            </div>
+        </div>
+
+        <!-- 番茄鐘頁面 -->
+        <div id="timer-page" class="page">
+            <div class="page-header">
+                <h1 class="page-title">🍅 專注計時</h1>
+                <p class="page-subtitle">專注25分鐘，休息5分鐘</p>
+            </div>
+            
+            <div class="card timer-container">
+                <div class="subject-selector">
+                    <select id="subject-select">
+                        <option value="經濟部國營考試">經濟部國營考試</option>
+                        <option value="環境檢驗類考試">環境檢驗類考試</option>
+                        <option value="初考會計類考試">初考會計類考試</option>
+                        <option value="綜合複習">綜合複習</option>
+                    </select>
+                </div>
+                
+                <div class="timer-circle">
+                    <div class="timer-inner">
+                        <div class="timer-display" id="timer-display">25:00</div>
+                        <div class="timer-status" id="timer-status">準備開始</div>
+                    </div>
+                </div>
+                
+                <div class="timer-controls">
+                    <button class="btn success" id="start-btn">開始</button>
+                    <button class="btn danger" id="pause-btn">暫停</button>
+                    <button class="btn" id="reset-btn">重置</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- 成就頁面 -->
+        <div id="achievement-page" class="page">
+            <div class="page-header">
+                <h1 class="page-title">🏆 學習成就</h1>
+                <p class="page-subtitle">記錄你的每一份努力</p>
+            </div>
+            
+            <div class="card">
+                <div class="stats-grid">
+                    <div class="stat-card">
+                        <div class="stat-number" id="total-sessions">0</div>
+                        <div class="stat-label">完成番茄鐘</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-number" id="total-hours">0</div>
+                        <div class="stat-label">學習時數</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-number" id="streak-days">0</div>
+                        <div class="stat-label">連續天數</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-number" id="daily-sessions">0</div>
+                        <div class="stat-label">今日完成</div>
+                    </div>
+                </div>
+                
+                <div class="progress-section">
+                    <div class="progress-header">
+                        <span style="font-weight: 600;">今日進度</span>
+                        <span id="daily-progress-text">0/8 番茄鐘</span>
+                    </div>
+                    <div class="progress-bar">
+                        <div class="progress-fill" id="daily-progress" style="width: 0%"></div>
+                    </div>
+                </div>
+
+                <div class="achievement-list" id="achievement-list">
+                    <div class="achievement-item">
+                        <div class="achievement-icon">🎯</div>
+                        <div class="achievement-text">
+                            <div class="achievement-title">開始你的學習之旅！</div>
+                            <div class="achievement-desc">完成第一個番茄鐘來解鎖更多成就</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 底部導航 -->
+    <div class="bottom-nav">
+        <div class="nav-item active" data-page="countdown-page">
+            <div class="nav-icon">📅</div>
+            <div class="nav-label">倒數</div>
+        </div>
+        <div class="nav-item" data-page="timer-page">
+            <div class="nav-icon">🍅</div>
+            <div class="nav-label">專注</div>
+        </div>
+        <div class="nav-item" data-page="achievement-page">
+            <div class="nav-icon">🏆</div>
+            <div class="nav-label">成就</div>
+        </div>
+    </div>
+
+    <!-- 通知 -->
+    <div class="notification" id="notification">
+        番茄鐘完成！休息一下吧 🎉
+    </div>
+
+    <script>
+        // 註冊 Service Worker
+        if ('serviceWorker' in navigator) {
+            window.addEventListener('load', () => {
+                navigator.serviceWorker.register('data:text/javascript;base64,c2VsZi5hZGRFdmVudExpc3RlbmVyKCdpbnN0YWxsJywgZXZlbnQgPT4ge30pOw==');
+            });
+        }
+
+        // 全域變數
+        let timerInterval = null;
+        let timeLeft = 25 * 60;
+        let isRunning = false;
+        let currentMode = 'work';
+        let sessionCount = 0;
+
+        // 統計資料
+        let stats = {
+            totalSessions: 0,
+            totalHours: 0,
+            streakDays: 0,
+            dailySessions: 0,
+            lastStudyDate: null,
+            achievements: []
+        };
+
+        // 考試日期
+        const examDates = [
+            new Date('2025-11-09'),
+            new Date('2025-12-06'),
+            new Date('2026-01-10')
+        ];
+
+        // 頁面導航
+        function switchPage(pageId) {
+            // 隱藏所有頁面
+            document.querySelectorAll('.page').forEach(page => {
+                page.classList.remove('active');
+            });
+            
+            // 顯示目標頁面
+            document.getElementById(pageId).classList.add('active');
+            
+            // 更新導航狀態
+            document.querySelectorAll('.nav-item').forEach(item => {
+                item.classList.remove('active');
+            });
+            document.querySelector(`[data-page="${pageId}"]`).classList.add('active');
+        }
+
+        // 載入儲存的資料
+        function loadData() {
+            const savedStats = localStorage.getItem('studyStats');
+            if (savedStats) {
+                stats = JSON.parse(savedStats);
+                updateStatsDisplay();
+                updateAchievements();
+            }
+            checkDailyReset();
+        }
+
+        // 儲存資料
+        function saveData() {
+            localStorage.setItem('studyStats', JSON.stringify(stats));
+        }
+
+        // 檢查是否需要重置每日資料
+        function checkDailyReset() {
+            const today = new Date().toDateString();
+            if (stats.lastStudyDate !== today) {
+                stats.dailySessions = 0;
+                updateDailyProgress();
+                updateStatsDisplay();
+            }
+        }
+
+        // 更新倒數計時
+        function updateCountdowns() {
+            const now = new Date();
+            
+            examDates.forEach((examDate, index) => {
+                const diff = examDate - now;
+                const element = document.getElementById(`countdown-${index + 1}`);
+                
+                if (diff > 0) {
+                    const days = Math.floor(diff / (1000 * 60 * 60 * 24));
+                    const hours = Math.floor((diff % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+                    const minutes = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
+                    
+                    element.textContent = `${days}天 ${hours}時 ${minutes}分`;
+                } else {
+                    element.textContent = '考試已結束';
+                    element.style.color = '#27ae60';
+                }
+            });
+        }
+
+        // 更新計時器顯示
+        function updateTimerDisplay() {
+            const minutes = Math.floor(timeLeft / 60);
+            const seconds = timeLeft % 60;
+            document.getElementById('timer-display').textContent = 
+                `${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
+        }
+
+        // 開始計時器
+        function startTimer() {
+            if (!isRunning) {
+                isRunning = true;
+                document.getElementById('timer-status').textContent = 
+                    currentMode === 'work' ? '專注中...' : '休息中...';
+                
+                // 防止螢幕休眠
+                if ('wakeLock' in navigator) {
+                    navigator.wakeLock.request('screen').catch(() => {});
+                }
+                
+                timerInterval = setInterval(() => {
+                    timeLeft--;
+                    updateTimerDisplay();
+                    
+                    if (timeLeft <= 0) {
+                        completeSession();
+                    }
+                }, 1000);
+            }
+        }
+
+        // 暫停計時器
+        function pauseTimer() {
+            if (isRunning) {
+                isRunning = false;
+                clearInterval(timerInterval);
+                document.getElementById('timer-status').textContent = '已暫停';
+            }
+        }
+
+        // 重置計時器
+        function resetTimer() {
+            isRunning = false;
+            clearInterval(timerInterval);
+            timeLeft = currentMode === 'work' ? 25 * 60 : 5 * 60;
+            updateTimerDisplay();
+            document.getElementById('timer-status').textContent = '準備開始';
+        }
+
+        // 完成一個番茄鐘
+        function completeSession() {
+            isRunning = false;
+            clearInterval(timerInterval);
+            
+            // 震動提醒
+            if ('vibrate' in navigator) {
+                navigator.vibrate([200, 100, 200]);
+            }
+            
+            if (currentMode === 'work') {
+                // 完成工作番茄鐘
+                sessionCount++;
+                stats.totalSessions++;
+                stats.totalHours += 0.42;
+                stats.dailySessions++;
+                stats.lastStudyDate = new Date().toDateString();
+                
+                showNotification('番茄鐘完成！休息一下吧 🎉');
+                
+                // 切換到休息模式
+                currentMode = 'break';
+                timeLeft = 5 * 60;
+                document.getElementById('timer-status').textContent = '休息時間！';
+                
+                checkAchievements();
+                updateStatsDisplay();
+                updateDailyProgress();
+                saveData();
+            } else {
+                // 完成休息
+                showNotification('休息結束！準備下一個番茄鐘 💪');
+                currentMode = 'work';
+                timeLeft = 25 * 60;
+                document.getElementById('timer-status').textContent = '準備開始';
+            }
+            
+            updateTimerDisplay();
+        }
+
+        // 顯示通知
+        function showNotification(message) {
+            const notification = document.getElementById('notification');
+            notification.textContent = message;
+            notification.classList.add('show');
+            
+            // 系統通知
+            if ('Notification' in window && Notification.permission === 'granted') {
+                new Notification('考試準備 App', {
+                    body: message,
+                    icon: 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMTI4IiBoZWlnaHQ9IjEyOCIgdmlld0JveD0iMCAwIDEyOCAyOCIgZmlsbD0iIzY2N2VlYSI+PHJlY3QgeD0iMTAiIHk9IjEwIiB3aWR0aD0iMTA4IiBoZWlnaHQ9IjEwOCIgcng9IjQiIGZpbGw9IiNmZmYiLz48dGV4dCB4PSI2NCIgeT0iNTQiIGZpbGw9IiMzMzMiIGZvbnQtc2l6ZT0iMjQiPjxucmFkPi48L3RleHQ+PC9zdmc+'
+                });
+            }
+            
+            setTimeout(() => {
+                notification.classList.remove('show');
+            }, 3000);
+        }
+
+        // 更新統計顯示
+        function updateStatsDisplay() {
+            document.getElementById('total-sessions').textContent = stats.totalSessions;
+            document.getElementById('total-hours').textContent = Math.round(stats.totalHours);
+            document.getElementById('streak-days').textContent = calculateStreak();
+            document.getElementById('daily-sessions').textContent = stats.dailySessions;
+        }
+
+        // 更新每日進度
+        function updateDailyProgress() {
+            const dailyGoal = 8;
+            const progress = (stats.dailySessions / dailyGoal) * 100;
+            
+            document.getElementById('daily-progress').style.width = `${Math.min(progress, 100)}%`;
+            document.getElementById('daily-progress-text').textContent = `${stats.dailySessions}/${dailyGoal} 番茄鐘`;
+        }
+
+        // 計算連續學習天數
+        function calculateStreak() {
+            const today = new Date().toDateString();
+            return stats.lastStudyDate === today ? 1 : 0;
+        }
+
+        // 檢查成就
+        function checkAchievements() {
+            const achievements = [
+                { id: 'first', condition: () => stats.totalSessions >= 1, 
+                  text: '首次完成！', desc: '完成了第一個番茄鐘', icon: '🎯' },
+                { id: 'five', condition: () => stats.totalSessions >= 5, 
+                  text: '初露鋒芒', desc: '完成5個番茄鐘', icon: '⭐' },
+                { id: 'twenty', condition: () => stats.totalSessions >= 20, 
+                  text: '學習達人', desc: '完成20個番茄鐘', icon: '🏆' },
+                { id: 'fifty', condition: () => stats.totalSessions >= 50, 
+                  text: '專注大師', desc: '完成50個番茄鐘', icon: '👑' },
+                { id: 'hundred', condition: () => stats.totalSessions >= 100, 
+                  text: '百鍊成鋼', desc: '完成100個番茄鐘', icon: '💎' },
+                { id: 'daily8', condition: () => stats.dailySessions >= 8, 
+                  text: '日行八善', desc: '單日完成8個番茄鐘', icon: '🔥' },
+                { id: 'hours10', condition: () => stats.totalHours >= 10, 
+                  text: '十小時勇士', desc: '累計學習10小時', icon: '💪' },
+                { id: 'hours50', condition: () => stats.totalHours >= 50, 
+                  text: '學習馬拉松', desc: '累計學習50小時', icon: '🏃‍♂️' },
+            ];
+
+            achievements.forEach(achievement => {
+                if (achievement.condition() && !stats.achievements.includes(achievement.id)) {
+                    stats.achievements.push(achievement.id);
+                    addAchievementToList(achievement);
+                    showNotification(`🎉 獲得成就：${achievement.text}！`);
+                }
+            });
+        }
+
+        // 添加成就到列表
+        function addAchievementToList(achievement) {
+            const list = document.getElementById('achievement-list');
+            const item = document.createElement('div');
+            item.className = 'achievement-item';
+            item.innerHTML = `
+                <div class="achievement-icon">${achievement.icon}</div>
+                <div class="achievement-text">
+                    <div class="achievement-title">${achievement.text}</div>
+                    <div class="achievement-desc">${achievement.desc}</div>
+                </div>
+                <div class="achievement-date">${new Date().toLocaleDateString()}</div>
+            `;
+            
+            // 添加動畫效果
+            item.style.transform = 'translateX(100%)';
+            item.style.opacity = '0';
+            list.insertBefore(item, list.firstChild);
+            
+            setTimeout(() => {
+                item.style.transition = 'all 0.3s ease';
+                item.style.transform = 'translateX(0)';
+                item.style.opacity = '1';
+            }, 10);
+        }
+
+        // 更新所有成就顯示
+        function updateAchievements() {
+            const list = document.getElementById('achievement-list');
+            
+            if (stats.achievements.length === 0) {
+                list.innerHTML = `
+                    <div class="achievement-item">
+                        <div class="achievement-icon">🎯</div>
+                        <div class="achievement-text">
+                            <div class="achievement-title">開始你的學習之旅！</div>
+                            <div class="achievement-desc">完成第一個番茄鐘來解鎖更多成就</div>
+                        </div>
+                    </div>
+                `;
+            } else {
+                // 重新構建成就列表
+                const achievements = [
+                    { id: 'first', text: '首次完成！', desc: '完成了第一個番茄鐘', icon: '🎯' },
+                    { id: 'five', text: '初露鋒芒', desc: '完成5個番茄鐘', icon: '⭐' },
+                    { id: 'twenty', text: '學習達人', desc: '完成20個番茄鐘', icon: '🏆' },
+                    { id: 'fifty', text: '專注大師', desc: '完成50個番茄鐘', icon: '👑' },
+                    { id: 'hundred', text: '百鍊成鋼', desc: '完成100個番茄鐘', icon: '💎' },
+                    { id: 'daily8', text: '日行八善', desc: '單日完成8個番茄鐘', icon: '🔥' },
+                    { id: 'hours10', text: '十小時勇士', desc: '累計學習10小時', icon: '💪' },
+                    { id: 'hours50', text: '學習馬拉松', desc: '累計學習50小時', icon: '🏃‍♂️' }
+                ];
+                
+                list.innerHTML = '';
+                achievements.forEach(achievement => {
+                    if (stats.achievements.includes(achievement.id)) {
+                        const item = document.createElement('div');
+                        item.className = 'achievement-item';
+                        item.innerHTML = `
+                            <div class="achievement-icon">${achievement.icon}</div>
+                            <div class="achievement-text">
+                                <div class="achievement-title">${achievement.text}</div>
+                                <div class="achievement-desc">${achievement.desc}</div>
+                            </div>
+                            <div class="achievement-date">已獲得</div>
+                        `;
+                        list.appendChild(item);
+                    }
+                });
+                
+                if (list.children.length === 0) {
+                    list.innerHTML = `
+                        <div class="achievement-item">
+                            <div class="achievement-icon">🎯</div>
+                            <div class="achievement-text">
+                                <div class="achievement-title">開始你的學習之旅！</div>
+                                <div class="achievement-desc">完成第一個番茄鐘來解鎖更多成就</div>
+                            </div>
+                        </div>
+                    `;
+                }
+            }
+        }
+
+        // 初始化事件監聽
+        function initEventListeners() {
+            // 底部導航點擊事件
+            document.querySelectorAll('.nav-item').forEach(item => {
+                item.addEventListener('click', () => {
+                    const pageId = item.dataset.page;
+                    switchPage(pageId);
+                });
+            });
+
+            // 番茄鐘控制按鈕
+            document.getElementById('start-btn').addEventListener('click', startTimer);
+            document.getElementById('pause-btn').addEventListener('click', pauseTimer);
+            document.getElementById('reset-btn').addEventListener('click', resetTimer);
+
+            // 請求通知權限
+            if ('Notification' in window && Notification.permission === 'default') {
+                Notification.requestPermission();
+            }
+
+            // 防止下拉刷新
+            document.addEventListener('touchmove', function(e) {
+                if (e.touches.length > 1) {
+                    e.preventDefault();
+                }
+            }, { passive: false });
+
+            let lastTouchEnd = 0;
+            document.addEventListener('touchend', function(e) {
+                const now = (new Date()).getTime();
+                if (now - lastTouchEnd <= 300) {
+                    e.preventDefault();
+                }
+                lastTouchEnd = now;
+            }, false);
+        }
+
+        // 初始化應用
+        function initApp() {
+            loadData();
+            updateTimerDisplay();
+            updateCountdowns();
+            updateDailyProgress();
+            initEventListeners();
+            
+            // 每秒更新倒數計時
+            setInterval(updateCountdowns, 1000);
+            
+            // 每分鐘檢查日期重置
+            setInterval(checkDailyReset, 60000);
+        }
+
+        // 當頁面載入完成時初始化
+        if (document.readyState === 'loading') {
+            document.addEventListener('DOMContentLoaded', initApp);
+        } else {
+            initApp();
+        }
+
+        // PWA 安裝提示
+        let deferredPrompt;
+        window.addEventListener('beforeinstallprompt', (e) => {
+            e.preventDefault();
+            deferredPrompt = e;
+            
+            // 顯示安裝提示（可以添加自定義的安裝按鈕）
+            setTimeout(() => {
+                if (confirm('是否要將此 App 安裝到您的手機桌面？')) {
+                    deferredPrompt.prompt();
+                    deferredPrompt.userChoice.then((choiceResult) => {
+                        deferredPrompt = null;
+                    });
+                }
+            }, 5000);
+        });
+
+        // 處理 iOS 的安裝提示
+        if (/iPad|iPhone|iPod/.test(navigator.userAgent) && !window.MSStream) {
+            window.addEventListener('load', () => {
+                if (!window.navigator.standalone) {
+                    setTimeout(() => {
+                        if (confirm('在 Safari 中點擊分享按鈕，然後選擇「加入主畫面」來安裝此 App！')) {
+                            // 可以顯示更詳細的安裝說明
+                        }
+                    }, 3000);
+                }
+            });
+        }
+    </script>
+</body>
+</html>
